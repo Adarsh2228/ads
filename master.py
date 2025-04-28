@@ -179,3 +179,278 @@ print("Random Forest Evaluation:")
 print(confusion_matrix(y_test, y_pred_rf))
 print(classification_report(y_test, y_pred_rf))
 print(f"Accuracy: {accuracy_score(y_test, y_pred_rf)}")
+
+
+
+
+
+
+
+# Import necessary libraries
+import pandas as pd
+import numpy as np
+import math
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import confusion_matrix, roc_curve, roc_auc_score
+from scipy.stats import pearsonr
+import statistics
+
+# -------------------- Classification --------------------
+# Load your dataset
+# Example: dataset = pd.read_csv('your_dataset.csv')
+
+# X = features dataframe, y = target column
+# Example:
+# X = dataset[['feature1', 'feature2', 'feature3']]
+# y = dataset['target']
+
+# For exam purpose you can just set correct columns here
+# Splitting the dataset into train and test
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+
+# Initialize Decision Tree Classifier
+clf_tree = DecisionTreeClassifier()
+clf_tree.fit(X_train, y_train)
+
+# Predict the results
+y_pred = clf_tree.predict(X_test)
+
+# Print predictions
+print("Predictions on Test Data:\n", y_pred)
+
+# Calculate Evaluation Metrics
+tn, fp, fn, tp = confusion_matrix(y_test, y_pred).ravel()
+print(f"True Negatives: {tn}")
+print(f"False Positives: {fp}")
+print(f"False Negatives: {fn}")
+print(f"True Positives: {tp}")
+
+# Accuracy
+accuracy = (tp + tn) / (tp + tn + fp + fn)
+print(f"Accuracy: {accuracy}")
+
+# Error Rate
+error_rate = (fp + fn) / (tp + tn + fp + fn)
+print(f"Error Rate: {error_rate}")
+
+# Precision
+precision = tp / (tp + fp)
+print(f"Precision: {precision}")
+
+# Sensitivity (Recall)
+sensitivity = tp / (tp + fn)
+print(f"Sensitivity (Recall): {sensitivity}")
+
+# Specificity
+specificity = tn / (tn + fp)
+print(f"Specificity: {specificity}")
+
+# ROC
+roc = math.sqrt((sensitivity**2 + specificity**2)) / math.sqrt(2)
+print(f"ROC: {roc}")
+
+# Geometric Mean
+geometric_mean = math.sqrt(sensitivity * specificity)
+print(f"Geometric Mean: {geometric_mean}")
+
+# F1 Score
+f1_score = (2 * sensitivity * precision) / (precision + sensitivity)
+print(f"F1 Score: {f1_score}")
+
+# False Positive Rate
+fpr = 1 - specificity
+print(f"False Positive Rate: {fpr}")
+
+# False Negative Rate
+fnr = 1 - sensitivity
+print(f"False Negative Rate: {fnr}")
+
+# Power (1 - FNR)
+power = 1 - fnr
+print(f"Power: {power}")
+
+# Plot ROC Curve
+false_positive_rate, true_positive_rate, thresholds = roc_curve(y_test, y_pred)
+plt.figure(figsize=(8, 6))
+plt.plot(false_positive_rate, true_positive_rate, label='Decision Tree')
+plt.plot([0, 1], [0, 1], linestyle='--')
+plt.title('ROC Curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.legend()
+plt.show()
+
+# ROC AUC Score
+print('ROC AUC Score:', roc_auc_score(y_test, y_pred))
+
+# -------------------- Regression --------------------
+
+# Load your dataset for Regression
+# Example: df = pd.read_csv('regression_data.csv')
+
+# Choose your columns
+# Example:
+# df2 = df[['Price', 'Demand']]
+# Rename 'Price' and 'Demand' below as needed
+
+df2['naturalLogPrice'] = np.log(df2['Price'])
+df2['naturalLogDemand'] = np.log(df2['Demand'])
+
+# Plot regression line
+sns.regplot(x="naturalLogPrice", y="naturalLogDemand", data=df2, fit_reg=True)
+plt.show()
+
+# Splitting into independent and dependent variables
+X = df2[['naturalLogPrice']]
+y = df2['naturalLogDemand']
+
+# Fit Linear Regression model
+model = LinearRegression()
+model.fit(X, y)
+
+# Predict values
+y_pred = model.predict(X)
+print("Predicted Values:\n", y_pred)
+
+# Pearson Correlation
+corr, _ = pearsonr(df2['naturalLogPrice'], df2['naturalLogDemand'])
+print('Pearson Correlation:', corr)
+
+# Mean Squared Error (MSE)
+mse = np.mean((y - y_pred) ** 2)
+print('Mean Squared Error:', mse)
+
+# Root Mean Squared Error (RMSE)
+rmse = math.sqrt(mse)
+print('Root Mean Squared Error:', rmse)
+
+# Coefficient of Determination (R^2 Score)
+y_mean = np.mean(y)
+total_variance = np.sum((y - y_mean) ** 2)
+residual_variance = np.sum((y - y_pred) ** 2)
+r2_score = 1 - (residual_variance / total_variance)
+print('Coefficient of Determination (R^2):', r2_score)
+
+# Root Mean Squared Relative Error (RMSRE)
+rmsre = math.sqrt(np.mean(((y - y_pred) / y) ** 2))
+print('Root Mean Squared Relative Error:', rmsre)
+
+# Mean Absolute Error (MAE)
+mae = np.mean(abs(y - y_pred))
+print('Mean Absolute Error:', mae)
+
+# Mean Absolute Percentage Error (MAPE)
+mape = np.mean(abs((y - y_pred) / y)) * 100
+print('Mean Absolute Percentage Error:', mape)
+
+# -------------------- Hypothesis Testing --------------------
+
+# Load dataset for Hypothesis Testing
+# Example: df = pd.read_csv('hypothesis_data.csv')
+
+# Taking two random samples
+df1 = df.sample(n=28)
+df2 = df.sample(n=100)
+
+# Sample Size
+nt = len(df1)
+nz = len(df2)
+
+# Sample Mean
+x_bar_t = df1['Total'].mean()
+x_bar_z = df2['Total'].mean()
+
+# Population Mean
+meu = df['Total'].mean()
+
+# Standard Deviation
+s_t = df1['Total'].std()
+s_z = df2['Total'].std()
+sigma = df['Total'].std()
+
+# Z-test
+print("Z-Test Result")
+Z_SCORE = (x_bar_z - meu) / (sigma / math.sqrt(nz))
+print("Z-Score:", Z_SCORE)
+critical_val_z = 1.65  # for alpha = 0.05
+
+if Z_SCORE > critical_val_z:
+    print("Reject Null Hypothesis")
+else:
+    print("Do NOT Reject Null Hypothesis")
+
+# T-test
+print("\nT-Test Result")
+T_SCORE = (x_bar_t - meu) / (s_t / math.sqrt(nt))
+print("T-Score:", T_SCORE)
+critical_val_t = 1.703  # for alpha = 0.05
+
+if T_SCORE > critical_val_t:
+    print("Reject Null Hypothesis")
+else:
+    print("Do NOT Reject Null Hypothesis")
+
+# Two Sample Independent T-Test
+men_arr = []
+women_arr = []
+
+# Collecting male and female samples
+for i in range(29):  # You can change the sample size
+    if df['Gender'].iloc[i] == "Female":
+        women_arr.append(df['Quantity'].iloc[i])
+    else:
+        men_arr.append(df['Quantity'].iloc[i])
+
+men_mean = statistics.fmean(men_arr)
+women_mean = statistics.fmean(women_arr)
+men_std = statistics.stdev(men_arr)
+women_std = statistics.stdev(women_arr)
+men_len = len(men_arr)
+women_len = len(women_arr)
+
+# Calculate T-Statistic
+pooled_std = math.sqrt((((men_len - 1) * men_std ** 2) + ((women_len - 1) * women_std ** 2)) / (men_len + women_len - 2))
+t_statistic = abs(men_mean - women_mean) / (pooled_std * math.sqrt((1 / men_len) + (1 / women_len)))
+
+print("\nTwo Sample T-Test Result")
+print("T-Statistic:", t_statistic)
+critical_val_two_sample = 1.703  # for df = 27
+
+if t_statistic > critical_val_two_sample:
+    print("Reject Null Hypothesis")
+else:
+    print("Do NOT Reject Null Hypothesis")
+
+# Two Sample Independent Z-Test
+men_arr = []
+women_arr = []
+
+for i in range(100):  # Bigger sample
+    if df['Gender'].iloc[i] == "Female":
+        women_arr.append(df['Quantity'].iloc[i])
+    else:
+        men_arr.append(df['Quantity'].iloc[i])
+
+men_mean = statistics.fmean(men_arr)
+women_mean = statistics.fmean(women_arr)
+men_std = statistics.stdev(men_arr)
+women_std = statistics.stdev(women_arr)
+men_len = len(men_arr)
+women_len = len(women_arr)
+
+# Calculate Z-Statistic
+z_statistic = abs(men_mean - women_mean) / math.sqrt((men_std ** 2 / men_len) + (women_std ** 2 / women_len))
+
+print("\nTwo Sample Z-Test Result")
+print("Z-Statistic:", z_statistic)
+z_critical = 1.645
+
+if z_statistic > z_critical:
+    print("Reject Null Hypothesis")
+else:
+    print("Do NOT Reject Null Hypothesis")
+  
