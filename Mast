@@ -1,0 +1,723 @@
+# ---------------------------- IMPORT NECESSARY LIBRARIES ----------------------------
+
+import pandas as pd
+import numpy as np
+import math
+import statistics
+import matplotlib.pyplot as plt
+import seaborn as sns
+from scipy import stats
+from scipy.stats import chi2_contingency, f_oneway, pearsonr
+from statsmodels.stats.weightstats import ztest
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
+from sklearn.linear_model import LogisticRegression, LinearRegression
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import classification_report, confusion_matrix, accuracy_score, roc_curve, roc_auc_score
+from imblearn.over_sampling import SMOTE
+
+# ---------------------------- LOAD DATASET ----------------------------
+
+# CHANGE 'your_dataset.csv' to your file name
+df = pd.read_csv('your_dataset.csv')  
+print(df.head())
+print(df.info())
+print(df.describe())
+print(df.isnull().sum())
+
+# ---------------------------- HANDLE MISSING VALUES ----------------------------
+
+# Example Filling - you can modify column names
+# df['numerical_column'] = df['numerical_column'].fillna(df['numerical_column'].mean())
+# df['categorical_column'] = df['categorical_column'].fillna(df['categorical_column'].mode()[0])
+
+# ---------------------------- EXPLORATORY DATA ANALYSIS (EDA) ----------------------------
+
+# SCATTER PLOT
+sns.scatterplot(x='column_x', y='column_y', data=df)  # <-- Change column_x, column_y
+plt.title('Scatter Plot')
+plt.show()
+
+# BOX PLOT
+sns.boxplot(x='column_name', data=df)  # <-- Change column_name
+plt.title('Box Plot')
+plt.show()
+
+# HISTOGRAM
+df['column_name'].hist(bins=30)  # <-- Change column_name
+plt.title('Histogram')
+plt.xlabel('Value')
+plt.ylabel('Frequency')
+plt.show()
+
+# PAIR PLOT
+sns.pairplot(df)
+plt.title('Pair Plot')
+plt.show()
+
+# HEATMAP
+plt.figure(figsize=(10, 8))
+sns.heatmap(df.corr(), annot=True, cmap='coolwarm')
+plt.title('Correlation Heatmap')
+plt.show()
+
+# VIOLIN PLOT
+sns.violinplot(x='categorical_column', y='numerical_column', data=df)  # <-- Change
+plt.title('Violin Plot')
+plt.show()
+
+# KDE PLOT
+sns.kdeplot(df['numerical_column'], shade=True)  # <-- Change
+plt.title('KDE Plot')
+plt.show()
+
+# COUNT PLOT
+sns.countplot(x='categorical_column', data=df)  # <-- Change
+plt.title('Count Plot')
+plt.show()
+
+# ---------------------------- HYPOTHESIS TESTING ----------------------------
+
+# 1. Z-TEST (for one sample mean comparison)
+z_stat, p_val = ztest(df['column_name'], value=expected_mean)  # <-- Change
+print(f"Z-Test: Z-statistic = {z_stat}, P-value = {p_val}")
+if p_val < 0.05:
+    print("Reject Null Hypothesis (Significant Difference)")
+else:
+    print("Do NOT Reject Null Hypothesis (No Significant Difference)")
+
+# 2. ONE SAMPLE T-TEST
+t_stat, p_val = stats.ttest_1samp(df['column_name'], popmean=expected_mean)  # <-- Change
+print(f"T-Test: T-statistic = {t_stat}, P-value = {p_val}")
+if p_val < 0.05:
+    print("Reject Null Hypothesis (Significant Difference)")
+else:
+    print("Do NOT Reject Null Hypothesis (No Significant Difference)")
+
+# 3. TWO SAMPLE T-TEST
+group1 = df[df['group_column'] == 'Group1']['target_column']  # <-- Change
+group2 = df[df['group_column'] == 'Group2']['target_column']
+t_stat, p_val = stats.ttest_ind(group1, group2)
+print(f"Two Sample T-Test: T-statistic = {t_stat}, P-value = {p_val}")
+if p_val < 0.05:
+    print("Reject Null Hypothesis (Groups are Different)")
+else:
+    print("Do NOT Reject Null Hypothesis (No Difference)")
+
+# 4. CHI-SQUARE TEST (for categorical variables)
+contingency_table = pd.crosstab(df['categorical_column1'], df['categorical_column2'])  # <-- Change
+chi2, p, dof, expected = chi2_contingency(contingency_table)
+print(f"Chi-Square Test: Chi2 = {chi2}, P-value = {p}")
+if p < 0.05:
+    print("Reject Null Hypothesis (Variables are Dependent)")
+else:
+    print("Do NOT Reject Null Hypothesis (Variables are Independent)")
+
+# 5. ANOVA TEST (for 3 or more groups)
+group1 = df[df['group_column'] == 'Group1']['target_column']  # <-- Change
+group2 = df[df['group_column'] == 'Group2']['target_column']
+group3 = df[df['group_column'] == 'Group3']['target_column']
+f_stat, p_val = f_oneway(group1, group2, group3)
+print(f"ANOVA Test: F-statistic = {f_stat}, P-value = {p_val}")
+if p_val < 0.05:
+    print("Reject Null Hypothesis (At least one group mean is different)")
+else:
+    print("Do NOT Reject Null Hypothesis (All group means are similar)")
+
+# ---------------------------- DATA PREPROCESSING ----------------------------
+
+# Label Encoding
+le = LabelEncoder()
+df['categorical_column'] = le.fit_transform(df['categorical_column'])  # <-- Change
+
+# ---------------------------- TRAIN TEST SPLIT ----------------------------
+
+X = df.drop('target_column', axis=1)  # <-- Change
+y = df['target_column']
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# SMOTE
+smote = SMOTE(random_state=42)
+X_train_smote, y_train_smote = smote.fit_resample(X_train, y_train)
+
+# ---------------------------- CLASSIFICATION MODELS ----------------------------
+
+# Logistic Regression
+log_reg = LogisticRegression()
+log_reg.fit(X_train_smote, y_train_smote)
+y_pred_log = log_reg.predict(X_test)
+print("\nLogistic Regression:")
+print(confusion_matrix(y_test, y_pred_log))
+print(classification_report(y_test, y_pred_log))
+print(f"Accuracy: {accuracy_score(y_test, y_pred_log)}")
+
+# Decision Tree
+dtree = DecisionTreeClassifier(random_state=42)
+dtree.fit(X_train_smote, y_train_smote)
+y_pred_tree = dtree.predict(X_test)
+print("\nDecision Tree Classifier:")
+print(confusion_matrix(y_test, y_pred_tree))
+print(classification_report(y_test, y_pred_tree))
+print(f"Accuracy: {accuracy_score(y_test, y_pred_tree)}")
+
+# Random Forest
+rforest = RandomForestClassifier(random_state=42)
+rforest.fit(X_train_smote, y_train_smote)
+y_pred_rf = rforest.predict(X_test)
+print("\nRandom Forest Classifier:")
+print(confusion_matrix(y_test, y_pred_rf))
+print(classification_report(y_test, y_pred_rf))
+print(f"Accuracy: {accuracy_score(y_test, y_pred_rf)}")
+
+# ---------------------------- ROC Curve Plot ----------------------------
+
+false_positive_rate, true_positive_rate, thresholds = roc_curve(y_test, y_pred_rf)
+plt.plot(false_positive_rate, true_positive_rate, label='Random Forest')
+plt.plot([0, 1], [0, 1], linestyle='--')
+plt.title('ROC Curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.legend()
+plt.show()
+
+print('ROC AUC Score:', roc_auc_score(y_test, y_pred_rf))
+
+# ---------------------------- REGRESSION ANALYSIS ----------------------------
+
+# For Regression Example
+# CHANGE column names for regression dataset
+df2 = df[['Price', 'Demand']].copy()
+
+# Natural Logs
+df2['naturalLogPrice'] = np.log(df2['Price'])
+df2['naturalLogDemand'] = np.log(df2['Demand'])
+
+# Regression Line Plot
+sns.regplot(x="naturalLogPrice", y="naturalLogDemand", data=df2, fit_reg=True)
+plt.title('Regression Line')
+plt.show()
+
+# Linear Regression
+X = df2[['naturalLogPrice']]
+y = df2['naturalLogDemand']
+model = LinearRegression()
+model.fit(X, y)
+y_pred = model.predict(X)
+
+# Evaluation Metrics
+print(f"\nRegression Evaluation:")
+corr, _ = pearsonr(df2['naturalLogPrice'], df2['naturalLogDemand'])
+print('Pearson Correlation:', corr)
+
+mse = np.mean((y - y_pred) ** 2)
+print('Mean Squared Error:', mse)
+
+rmse = math.sqrt(mse)
+print('Root Mean Squared Error:', rmse)
+
+y_mean = np.mean(y)
+total_variance = np.sum((y - y_mean) ** 2)
+residual_variance = np.sum((y - y_pred) ** 2)
+r2_score = 1 - (residual_variance / total_variance)
+print('R-Squared:', r2_score)
+
+rmsre = math.sqrt(np.mean(((y - y_pred) / y) ** 2))
+print('Root Mean Squared Relative Error:', rmsre)
+
+mae = np.mean(abs(y - y_pred))
+print('Mean Absolute Error:', mae)
+
+mape = np.mean(abs((y - y_pred) / y)) * 100
+print('Mean Absolute Percentage Error:', mape)
+
+# --------------------------------------------------------------------------------------------
+
+print("\nDone! Just change column names where needed as indicated by <-- CHANGE comments.")
+
+
+# ---------------------------------------------------------------
+# IMPORT REQUIRED LIBRARIES
+# ---------------------------------------------------------------
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.cluster import KMeans
+from sklearn.metrics import silhouette_score, adjusted_rand_score, normalized_mutual_info_score
+
+# ---------------------------------------------------------------
+# LOAD DATASET
+# ---------------------------------------------------------------
+# If you have a CSV file, uncomment below and change filename
+# df = pd.read_csv('your_dataset.csv')   # <-- For your own dataset
+
+# For demo (Iris dataset used here)
+from sklearn import datasets
+df = datasets.load_iris()
+features = pd.DataFrame(data=df.data, columns=df.feature_names)  # Feature Columns (Numerical type)
+target = pd.DataFrame(data=df.target, columns=['target'])        # Target Column (Categorical type)
+
+# Combine features and target
+data = pd.concat([features, target], axis=1)
+
+# View first few rows
+print("First few rows of the dataset:")
+print(data.head())
+
+# ---------------------------------------------------------------
+# SELECT FEATURES FOR CLUSTERING
+# ---------------------------------------------------------------
+# NOTE:
+# - You MUST select only **Numerical Columns** for KMeans Clustering
+# - Example: 'sepal length (cm)', 'petal length (cm)', etc.
+
+# You can modify the list of columns below
+selected_features = ['sepal length (cm)', 'sepal width (cm)']  # <-- Change these feature columns if needed
+
+X = data[selected_features]
+
+# ---------------------------------------------------------------
+# APPLY KMEANS CLUSTERING
+# ---------------------------------------------------------------
+# Create KMeans Model
+kmeans_model = KMeans(n_clusters=3, random_state=42)  # 3 clusters (you can change n_clusters)
+
+# Fit Model
+kmeans_model.fit(X)
+
+# Assign cluster labels to original data
+data['kmeans_cluster'] = kmeans_model.labels_
+
+# View updated dataset
+print("\nDataset after clustering:")
+print(data.head())
+
+# ---------------------------------------------------------------
+# SCATTER PLOT FOR VISUALIZING CLUSTERS
+# ---------------------------------------------------------------
+# Plot the clustering result
+plt.figure(figsize=(8,6))
+plt.scatter(x=data[selected_features[0]], 
+            y=data[selected_features[1]], 
+            c=data['kmeans_cluster'], 
+            cmap='viridis')
+plt.xlabel(selected_features[0])
+plt.ylabel(selected_features[1])
+plt.title('KMeans Clustering Visualization')
+plt.colorbar(label='Cluster Label')
+plt.show()
+
+# ---------------------------------------------------------------
+# EVALUATION METRICS FOR CLUSTERING
+# ---------------------------------------------------------------
+
+# 1. Silhouette Score (Higher is better, max is 1)
+silhouette_avg = silhouette_score(X, data['kmeans_cluster'], metric='euclidean')
+print(f"\nSilhouette Score: {silhouette_avg:.4f}")
+# Interpretation:
+# Close to 1: Well clustered | 0: Overlapping clusters | -1: Wrong clusters
+
+# 2. Adjusted Rand Index (Compare with real labels if available)
+# Only if true labels exist (like 'target' in Iris dataset)
+true_labels = data['target']  # <-- Must be the original true group column (if available)
+ari_score = adjusted_rand_score(true_labels, data['kmeans_cluster'])
+print(f"Adjusted Rand Index: {ari_score:.4f}")
+# Interpretation:
+# 1 = Perfect clustering, 0 = Random clustering, Negative = Bad clustering
+
+# 3. Normalized Mutual Information (Measures mutual dependence)
+nmi_score = normalized_mutual_info_score(true_labels, data['kmeans_cluster'])
+print(f"Normalized Mutual Information Score: {nmi_score:.4f}")
+# Interpretation:
+# 1 = Perfect match, 0 = No mutual information
+
+# ---------------------------------------------------------------
+# DONE! Now you can change the dataset or columns easily!
+# ---------------------------------------------------------------
+
+# ======================================================================
+#                TIME SERIES FORECASTING (ARIMA MODEL)
+# ======================================================================
+
+# Import necessary libraries
+import pandas as pd
+import matplotlib.pyplot as plt
+import statsmodels.api as sm
+from statsmodels.tsa.stattools import adfuller
+from statsmodels.tsa.seasonal import seasonal_decompose
+from statsmodels.tsa.arima.model import ARIMA
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error, mean_absolute_error
+from math import sqrt
+
+# ---------------- LOAD DATA ----------------
+
+# Load dataset (Make sure your dataset has a 'Date' and 'Target' column)
+df = pd.read_csv('your_timeseries_dataset.csv')  # <-- Change your file name here
+
+# Convert 'Date' column to datetime
+df['Date'] = pd.to_datetime(df['Date'])  # <-- Change 'Date' if your column is named differently
+
+# Set 'Date' as the index
+df.set_index('Date', inplace=True)
+
+# View first few rows
+print(df.head())
+
+# ---------------- BASIC PLOT ----------------
+
+# Plot the Time Series Data
+df.plot(figsize=(15,6))
+plt.title('Date vs Target Variable')
+plt.ylabel('Target Value')
+plt.xlabel('Date')
+plt.show()
+
+# ---------------- STATIONARITY TEST ----------------
+
+# Perform Augmented Dickey-Fuller (ADF) test to check stationarity
+result = adfuller(df['Total'])  # <-- Change 'Total' to your target column
+print('ADF Statistic:', result[0])
+print('p-value:', result[1])
+if result[1] < 0.05:
+    print("Data is Stationary (Good for ARIMA)")
+else:
+    print("Data is NOT Stationary (May require differencing)")
+
+# ---------------- SEASONAL DECOMPOSITION ----------------
+
+# Decompose the series into trend, seasonal and residual components
+decomposition = seasonal_decompose(df['Total'], model='multiplicative')  # <-- Change 'Total'
+decomposition.plot()
+plt.show()
+
+# ---------------- ACF and PACF PLOTS ----------------
+
+# Plot ACF and PACF to determine p and q
+fig = sm.graphics.tsa.plot_acf(df['Total'].dropna(), lags=40)
+plt.show()
+
+fig = sm.graphics.tsa.plot_pacf(df['Total'].dropna(), lags=40)
+plt.show()
+
+# ---------------- TRAIN-TEST SPLIT ----------------
+
+# Split the data into training and testing
+X_train, X_test = train_test_split(df['Total'].dropna(), test_size=0.33, shuffle=False)  # <-- Change 'Total'
+
+# ---------------- ARIMA MODEL ----------------
+
+# Define the ARIMA model
+model = ARIMA(X_train, order=(0,1,1))  # <-- p,d,q values can be tuned
+model_fit = model.fit()
+
+# Forecast
+predictions = model_fit.forecast(len(X_test))
+
+# ---------------- MODEL EVALUATION ----------------
+
+# Calculate evaluation metrics
+mse = mean_squared_error(X_test, predictions)
+mae = mean_absolute_error(X_test, predictions)
+rmse = sqrt(mse)
+
+print("\nEvaluation Metrics:")
+print("Mean Squared Error (MSE):", mse)
+print("Mean Absolute Error (MAE):", mae)
+print("Root Mean Squared Error (RMSE):", rmse)
+
+# ---------------- PLOT FORECAST ----------------
+
+# Plot actual vs predicted values
+plt.figure(figsize=(15,6))
+plt.plot(X_test.index, X_test.values, label='Actual', marker='o')
+plt.plot(X_test.index, predictions, label='Forecasted', marker='x')
+plt.title('Actual vs Forecasted')
+plt.legend()
+plt.show()
+
+# ======================================================================
+#                HANDLING IMBALANCED DATA (SMOTE + CLASSIFICATION)
+# ======================================================================
+
+# Import necessary libraries
+from imblearn.over_sampling import SMOTE
+from sklearn.preprocessing import LabelEncoder
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import classification_report
+import seaborn as sns
+
+# ---------------- LOAD DATA ----------------
+
+# Load classification dataset
+df2 = pd.read_csv('your_classification_dataset.csv')  # <-- Change your file name here
+
+# View first few rows
+print(df2.head())
+
+# ---------------- PREPROCESSING ----------------
+
+# Encode all categorical columns automatically
+for col in df2.columns:
+    if df2[col].dtype == 'object':
+        le = LabelEncoder()
+        df2[col] = le.fit_transform(df2[col])
+
+# ---------------- TRAIN-TEST SPLIT ----------------
+
+# Set feature variables and target variable
+X = df2.drop('Exited', axis=1)  # <-- Change 'Exited' to your target column
+y = df2['Exited']
+
+# Split data
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# View class distribution
+print("\nOriginal Class Distribution:\n", y_train.value_counts())
+
+# ---------------- APPLY SMOTE ----------------
+
+# Apply SMOTE to balance the classes
+smote = SMOTE(random_state=42)
+X_train_smote, y_train_smote = smote.fit_resample(X_train, y_train)
+
+# View new class distribution
+print("\nClass Distribution After SMOTE:\n", y_train_smote.value_counts())
+
+# ---------------- DECISION TREE CLASSIFIER ----------------
+
+# Train a Decision Tree
+tree_clf = DecisionTreeClassifier(random_state=42)
+tree_clf.fit(X_train_smote, y_train_smote)
+
+# Predictions
+y_pred_tree = tree_clf.predict(X_test)
+
+# Evaluation
+print("\nDecision Tree Classification Report:")
+print(classification_report(y_test, y_pred_tree))
+
+# ---------------- LOGISTIC REGRESSION CLASSIFIER ----------------
+
+# Train a Logistic Regression model
+log_reg = LogisticRegression(max_iter=1000)
+log_reg.fit(X_train_smote, y_train_smote)
+
+# Predictions
+y_pred_log = log_reg.predict(X_test)
+
+# Evaluation
+print("\nLogistic Regression Classification Report:")
+print(classification_report(y_test, y_pred_log))
+
+# ---------------- VISUALIZE BALANCED CLASSES ----------------
+
+# Plot the balanced classes after SMOTE
+sns.countplot(x=y_train_smote)
+plt.title('Balanced Class Distribution After SMOTE')
+plt.xlabel('Target Class')
+plt.ylabel('Count')
+plt.show()
+
+# ======================================================================
+#                          END OF FILE
+# ======================================================================
+
+
+# =====================================================
+# --------------- SECTION 1: Basic EDA & Visualization (ADS 1) ---------------
+# =====================================================
+
+# Import necessary libraries
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Load dataset
+df = pd.read_csv('your_dataset.csv')  # <-- CHANGE your filename here
+
+# View data
+print(df.head())
+print(df.info())
+print(df.describe())
+print(df.isnull().sum())
+
+# Fill missing values (Optional)
+# For numerical
+# df['numerical_column'] = df['numerical_column'].fillna(df['numerical_column'].mean())
+# For categorical
+# df['categorical_column'] = df['categorical_column'].fillna(df['categorical_column'].mode()[0])
+
+# Visualizations
+
+# Scatter Plot
+sns.scatterplot(x='feature1', y='feature2', data=df)  # <-- Change feature names
+plt.title('Scatter Plot')
+plt.show()
+
+# Histogram
+df['feature1'].hist(bins=30)  # <-- Change feature name
+plt.title('Histogram')
+plt.xlabel('Value')
+plt.ylabel('Frequency')
+plt.show()
+
+# Box Plot
+sns.boxplot(x='feature1', data=df)  # <-- Change feature
+plt.title('Box Plot')
+plt.show()
+
+# Pair Plot
+sns.pairplot(df)
+plt.show()
+
+# Heatmap
+plt.figure(figsize=(10,8))
+sns.heatmap(df.corr(), annot=True, cmap='coolwarm')
+plt.title('Correlation Heatmap')
+plt.show()
+
+# Violin Plot
+sns.violinplot(x='categorical_feature', y='numerical_feature', data=df)  # <-- Change
+plt.title('Violin Plot')
+plt.show()
+
+# KDE Plot
+sns.kdeplot(df['numerical_feature'], shade=True)  # <-- Change
+plt.title('KDE Plot')
+plt.show()
+
+# === Columns Needed: ===
+# - Numerical Columns: For scatter, hist, box, kde, heatmap
+# - Categorical Columns: For violin plots
+
+# =====================================================
+# --------------- SECTION 2: Hypothesis Testing (ADS 2) ---------------
+# =====================================================
+
+from scipy.stats import ttest_1samp, ttest_ind, chi2_contingency
+from statsmodels.stats.weightstats import ztest
+
+# 1 Sample Z-Test
+z_stat, p_val = ztest(df['numerical_column'], value=population_mean)  # <-- Change
+print(f"Z-Test: Z-statistic = {z_stat}, p-value = {p_val}")
+if p_val < 0.05:
+    print("Reject Null Hypothesis")
+else:
+    print("Fail to Reject Null Hypothesis")
+
+# 1 Sample T-Test
+t_stat, p_val = ttest_1samp(df['numerical_column'], popmean=population_mean)  # <-- Change
+print(f"T-Test: t-statistic = {t_stat}, p-value = {p_val}")
+if p_val < 0.05:
+    print("Reject Null Hypothesis")
+else:
+    print("Fail to Reject Null Hypothesis")
+
+# 2 Sample Independent T-Test
+group1 = df[df['group_column'] == 'Group1']['numerical_column']  # <-- Change
+group2 = df[df['group_column'] == 'Group2']['numerical_column']
+t_stat, p_val = ttest_ind(group1, group2)
+print(f"Two-Sample T-Test: t-statistic = {t_stat}, p-value = {p_val}")
+if p_val < 0.05:
+    print("Reject Null Hypothesis")
+else:
+    print("Fail to Reject Null Hypothesis")
+
+# Chi-Square Test
+contingency_table = pd.crosstab(df['categorical1'], df['categorical2'])  # <-- Change
+chi2, p, dof, expected = chi2_contingency(contingency_table)
+print(f"Chi-Square Test: chi2 = {chi2}, p-value = {p}")
+if p < 0.05:
+    print("Reject Null Hypothesis (Dependent)")
+else:
+    print("Fail to Reject Null Hypothesis (Independent)")
+
+# === Columns Needed: ===
+# - Numerical Columns: for Z-test, T-test
+# - Categorical Columns: for Chi-Square Test
+
+# =====================================================
+# --------------- SECTION 3: Classification Models (ADS 3) ---------------
+# =====================================================
+
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
+from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import confusion_matrix, classification_report, accuracy_score
+
+# Encode categorical features
+for col in df.columns:
+    if df[col].dtype == 'object':
+        le = LabelEncoder()
+        df[col] = le.fit_transform(df[col])
+
+# Feature Matrix and Target Vector
+X = df.drop('target_column', axis=1)  # <-- Change
+y = df['target_column']
+
+# Split data
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Logistic Regression
+logreg = LogisticRegression(max_iter=1000)
+logreg.fit(X_train, y_train)
+y_pred_log = logreg.predict(X_test)
+print("\nLogistic Regression Results:")
+print(confusion_matrix(y_test, y_pred_log))
+print(classification_report(y_test, y_pred_log))
+
+# Decision Tree
+dtree = DecisionTreeClassifier()
+dtree.fit(X_train, y_train)
+y_pred_tree = dtree.predict(X_test)
+print("\nDecision Tree Results:")
+print(confusion_matrix(y_test, y_pred_tree))
+print(classification_report(y_test, y_pred_tree))
+
+# Random Forest
+rf = RandomForestClassifier()
+rf.fit(X_train, y_train)
+y_pred_rf = rf.predict(X_test)
+print("\nRandom Forest Results:")
+print(confusion_matrix(y_test, y_pred_rf))
+print(classification_report(y_test, y_pred_rf))
+
+# === Columns Needed: ===
+# - Features: numerical or label-encoded categorical
+# - Target: categorical or binary classification target
+
+# =====================================================
+# --------------- SECTION 4: Handling Imbalanced Data (SMOTE) ---------------
+# =====================================================
+
+from imblearn.over_sampling import SMOTE
+
+# Apply SMOTE
+smote = SMOTE(random_state=42)
+X_train_smote, y_train_smote = smote.fit_resample(X_train, y_train)
+
+print("\nClass Distribution After SMOTE:")
+print(y_train_smote.value_counts())
+
+# Train model after SMOTE
+dtree_smote = DecisionTreeClassifier()
+dtree_smote.fit(X_train_smote, y_train_smote)
+y_pred_smote = dtree_smote.predict(X_test)
+
+print("\nDecision Tree After SMOTE:")
+print(confusion_matrix(y_test, y_pred_smote))
+print(classification_report(y_test, y_pred_smote))
+
+# === Columns Needed: ===
+# - Features: numerical or encoded
+# - Target: Binary classification column (0/1)
+
+# =====================================================
+#                    END OF FILE
+# =====================================================
